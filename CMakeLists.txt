@@ -95,5 +95,21 @@ FetchContent_Declare(
 FetchContent_GetProperties(libusb)
 if(NOT libusb_POPULATED)
     FetchContent_Populate(libusb)
-    add_subdirectory(${libusb_SOURCE_DIR} ${libusb_BINARY_DIR})
+    add_library(libusb INTERFACE)
+    target_link_libraries()
 endif()
+
+# Add more CMake libraries here ...
+FetchContent_Declare(
+        tinyspline
+        GIT_REPOSITORY https://github.com/msteinbeck/tinyspline.git
+        GIT_TAG 0.2.0
+)
+FetchContent_GetProperties(tinyspline)
+if(NOT tinyspline_POPULATED)
+    FetchContent_Populate(tinyspline)
+    add_subdirectory(${tinyspline_SOURCE_DIR} ${tinyspline_BINARY_DIR})
+
+endif()
+
+
