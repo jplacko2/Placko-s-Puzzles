@@ -87,3 +87,13 @@ if(NOT catch2_POPULATED)
 endif()
 
 # Add more CMake libraries here ...
+FetchContent_Declare(
+        libusb
+        GIT_REPOSITORY https://github.com/libusb/libusb.git
+        GIT_TAG v1.0.23
+)
+FetchContent_GetProperties(libusb)
+if(NOT libusb_POPULATED)
+    FetchContent_Populate(libusb)
+    add_subdirectory(${libusb_SOURCE_DIR} ${libusb_BINARY_DIR})
+endif()
