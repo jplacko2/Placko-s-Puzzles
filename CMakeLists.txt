@@ -87,29 +87,4 @@ if(NOT catch2_POPULATED)
 endif()
 
 # Add more CMake libraries here ...
-FetchContent_Declare(
-        libusb
-        GIT_REPOSITORY https://github.com/libusb/libusb.git
-        GIT_TAG v1.0.23
-)
-FetchContent_GetProperties(libusb)
-if(NOT libusb_POPULATED)
-    FetchContent_Populate(libusb)
-    add_library(libusb INTERFACE)
-    target_link_libraries()
-endif()
-
-# Add more CMake libraries here ...
-FetchContent_Declare(
-        tinyspline
-        GIT_REPOSITORY https://github.com/msteinbeck/tinyspline.git
-        GIT_TAG 0.2.0
-)
-FetchContent_GetProperties(tinyspline)
-if(NOT tinyspline_POPULATED)
-    FetchContent_Populate(tinyspline)
-    add_subdirectory(${tinyspline_SOURCE_DIR} ${tinyspline_BINARY_DIR})
-
-endif()
-
 
