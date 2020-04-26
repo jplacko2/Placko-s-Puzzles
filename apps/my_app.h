@@ -5,6 +5,11 @@
 
 #include <cinder/Color.h>
 #include <cinder/app/App.h>
+#include "cinder/app/RendererGl.h"
+#include "cinder/ImageIo.h"
+#include "cinder/gl/Texture.h"
+#include "cinder/gl/gl.h"
+#include "cinder/Log.h"
 
 namespace myapp {
 
@@ -19,18 +24,17 @@ class MyApp : public cinder::app::App {
   void update() override;
   void draw() override;
   void keyDown(cinder::app::KeyEvent) override;
+  void fileDrop( FileDropEvent event ) override;
+
+  gl::TextureRef		mTexture;
+  bool is_jigsaw_mode = true;
+
+ private:
+  void createToolsWindow ();
+  void drawPicture();
 };
 
-// The window-specific data for each window
-class WindowData {
- public:
-  WindowData()
-      : mColor(Color( 0 , 0.8, 0.8 ) ) // a random color
-  {}
 
-  Color	mColor;
-  list<cinder::vec2>		mPoints; // the points drawn into this window
-};
 
 }  // namespace myapp
 

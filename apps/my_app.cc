@@ -7,7 +7,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/BSpline.h"
 #include "cinder/gl/draw.h"
-#include "cinder/gl/gl.h"
+
 
 #include "CinderImGui.h"
 
@@ -19,28 +19,83 @@ namespace myapp {
 using cinder::app::KeyEvent;
 using cinder::Color;
 using cinder::ColorA;
+using namespace ImGui;
 
 MyApp::MyApp() { }
 
 void MyApp::setup() {
   cinder::gl::enableDepthWrite();
   cinder::gl::enableDepthRead();
-  getWindow()->setUserData(new WindowData);
-  app::WindowRef new_window = createWindow(Window::Format().size(400, 400));
   ui::initialize();
 
-  //ui::initialize( ui::Options().window(new_window).frameRounding( 0.0f ) );
+
 }
 
-void MyApp::update() { }
+void MyApp::update() {
+  ui::ScopedWindow tools_window("Tools");
+
+  if (ui::Button("Find Picture", ImVec2(200, 150))) {
+    try {
+      fs::path path = getOpenFilePath( "", ImageIo::getLoadExtensions() );
+      if( ! path.empty() ) {
+        mTexture = gl::Texture::create( loadImage( path ) );
+      }
+    }
+    catch( Exception &exc ) {
+      CI_LOG_EXCEPTION( "failed to load image.", exc );
+    }
+  }
+  ui::SameLine();
+  if (ui::Button("Shuffle Pieces", ImVec2(200, 150))) {
+
+  }
+
+  if (is_jigsaw_mode) {
+    ui::SameLine();
+    if (ui::Button("Slide Puzzle Mode", ImVec2(200, 150))) {
+      is_jigsaw_mode = false;
+    }
+
+  } else {
+    ui::SameLine();
+    if (ui::Button("Slide Puzzle Mode", ImVec2(300, 150))) {
+      is_jigsaw_mode = true;
+    }
+  }
+}
 
 void MyApp::draw() {
-  cinder::gl::enableAlphaBlending();
+ cinder::gl::enableAlphaBlending();
   cinder::gl::clear();
-  cinder::gl::clear(Color(1, 1, 1));
-  ImGui::Button("shuffle", ImVec2(100, 100));
+  drawPicture();
 }
 
 void MyApp::keyDown(KeyEvent event) { }
 
-}  // namespace myapp
+void MyApp::createToolsWindow () {
+
+}
+
+void MyApp::fileDrop( FileDropEvent event ) {
+  try {
+    mTexture = gl::Texture::create( loadImage( loadFile( event.getFile( 0 ) ) ) );
+  }
+  catch( Exception &exc ) {
+    CI_LOG_EXCEPTION( "failed to load image: " << event.getFile( 0 ), exc );
+  }
+}
+
+void MyApp::drawPicture() {
+ gl::clear( Color( 0.5f, 0.5f, 0.5f ) );
+  gl::enableAlphaBlending();
+
+  if( mTexture ) {
+    Rectf destRect = Rectf( mTexture->getBounds() ).getCenteredFit( getWindowBounds(), true ).scaledCentered( .85f );
+    gl::draw( mTexture, destRect );
+  }
+}
+
+}
+
+
+// namespace myapp
