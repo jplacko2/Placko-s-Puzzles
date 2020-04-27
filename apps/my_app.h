@@ -10,6 +10,7 @@
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Log.h"
+#include "cinder/Surface.h"
 
 namespace myapp {
 
@@ -26,12 +27,17 @@ class MyApp : public cinder::app::App {
   void keyDown(cinder::app::KeyEvent) override;
   void fileDrop( FileDropEvent event ) override;
 
-  gl::TextureRef		mTexture;
+  gl::TextureRef mTexture;
+  Surface whole_picture;
+  std::vector<gl::TextureRef> piece_textures;
   bool is_jigsaw_mode = true;
+  int numPiecesX;
+  int numPiecesY;
 
  private:
-  void createToolsWindow ();
   void drawPicture();
+  void breakUpPicture();
+  int getOptimalNumPieces(int length);
 };
 
 
