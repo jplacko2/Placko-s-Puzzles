@@ -93,10 +93,10 @@ void MyApp::drawPicture() {
     gl::draw(mTexture, destRect);
   }*/
   if (!(piece_textures.size() == 0)) {
-    Rectf pieceRect = Rectf(piece_textures.at(1)->getBounds())
+    Rectf pieceRect = Rectf(piece_textures.at(0)->getBounds())
                       .getCenteredFit(getWindowBounds(), true)
                       .scaledCentered(.85f);
-    gl::draw(piece_textures.at(1), pieceRect);
+    gl::draw(piece_textures.at(0), pieceRect);
   }
 }
 
@@ -111,7 +111,7 @@ void MyApp::drawPicture() {
     for (int i = 0; i < whole_picture.getHeight(); i = i + piece_height) {
       for (int j = 0; j < whole_picture.getWidth(); j = j + piece_width) {
         Area piece_bounds(ivec2(j, i), ivec2(j + piece_width, i + piece_height));
-        Surface new_piece;
+        Surface new_piece(piece_width, piece_height, true);
         new_piece.copyFrom(whole_picture, piece_bounds);
         piece_textures.push_back(gl::Texture::create(new_piece));
       }
