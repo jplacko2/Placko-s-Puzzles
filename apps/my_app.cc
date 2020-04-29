@@ -52,12 +52,14 @@ void MyApp::update() {
     ui::SameLine();
     if (ui::Button("Slide Puzzle Mode", ImVec2(200, 150))) {
       is_jigsaw_mode = false;
+      breakUpPicture();
     }
 
   } else {
     ui::SameLine();
     if (ui::Button("Jigsaw Puzzle Mode", ImVec2(200, 150))) {
       is_jigsaw_mode = true;
+      breakUpPicture();
     }
   }
 }
@@ -84,17 +86,17 @@ void MyApp::drawPicture() {
   gl::clear(Color(0.5f, 0.5f, 0.5f));
   gl::enableAlphaBlending();
 
- /* if (mTexture) {
+  /*if (mTexture) {
     Rectf destRect = Rectf(mTexture->getBounds())
                          .getCenteredFit(getWindowBounds(), true)
                          .scaledCentered(.85f);
     gl::draw(mTexture, destRect);
   }*/
-  if (!piece_textures.empty()) {
-    Rectf pieceRect = Rectf(piece_textures.at(0)->getBounds())
+  if (!(piece_textures.size() == 0)) {
+    Rectf pieceRect = Rectf(piece_textures.at(1)->getBounds())
                       .getCenteredFit(getWindowBounds(), true)
                       .scaledCentered(.85f);
-    gl::draw(piece_textures.at(0), pieceRect);
+    gl::draw(piece_textures.at(1), pieceRect);
   }
 }
 
@@ -108,13 +110,13 @@ void MyApp::drawPicture() {
 
     for (int i = 0; i < whole_picture.getHeight(); i = i + piece_height) {
       for (int j = 0; j < whole_picture.getWidth(); j = j + piece_width) {
-        Area piece_bounds(i, j, i + piece_width, j + piece_height);
+        Area piece_bounds(ivec2(j, i), ivec2(j + piece_width, i + piece_height));
         Surface new_piece;
-        new_piece.copyFrom(whole_picture, piece_bounds, ImVec2(0, 0));
+        new_piece.copyFrom(whole_picture, piece_bounds);
         piece_textures.push_back(gl::Texture::create(new_piece));
       }
+    }
   }
-}
 
 int MyApp::getOptimalNumPieces(int length) {
   if (is_jigsaw_mode) {
@@ -130,6 +132,7 @@ int MyApp::getOptimalNumPieces(int length) {
       }
     }
   }
+  return 2;
 }
 
 }// namespace myapp
