@@ -10,3 +10,5 @@
 4/27 worked on breaking up pictures into each piece
 
 4/28 fixed issue with breaking up picture into pieces
+
+4/29 added functionality for shuffle and auto solve

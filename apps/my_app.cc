@@ -38,6 +38,8 @@ void MyApp::update() {
         whole_picture = Surface(loadImage(path));
         mTexture = gl::Texture::create(whole_picture);
         breakUpPicture();
+        should_shuffle = false;
+        has_shuffled_already = false;
       }
     } catch (Exception &exc) {
       CI_LOG_EXCEPTION("failed to load image.", exc);
@@ -91,6 +93,8 @@ void MyApp::fileDrop(FileDropEvent event) {
     whole_picture = Surface(loadImage(loadFile(event.getFile(0))));
     mTexture = gl::Texture::create(whole_picture);
     breakUpPicture();
+    should_shuffle = false;
+    has_shuffled_already = false;
   } catch (Exception &exc) {
     CI_LOG_EXCEPTION("failed to load image: " << event.getFile(0), exc);
   }
@@ -103,7 +107,7 @@ void MyApp::drawPicture() {
   if (mTexture) {
     Rectf destRect = Rectf(mTexture->getBounds())
                          .getCenteredFit(getWindowBounds(), true)
-                         .scaledCentered(.85f);
+                         .scaledCentered(.9f);
     gl::draw(mTexture, destRect);
   }
 }
@@ -113,16 +117,22 @@ void MyApp::drawPiecesScattered() {
 
   gl::clear(Color(0.5f, 0.5f, 0.5f));
   gl::enableAlphaBlending();
-
+  //float scale = .9f * (1.0f / (float) numPiecesY);
   if (!pieces.empty() && !has_shuffled_already) {
     for (int i = 0; i < pieces.size(); i++) {
 
-      pieces.at(i).bounds.moveULTo(ivec2(random.nextInt(0, 1000),
-          random.nextInt(0, 1000)));
+      pieces.at(i).bounds.moveULTo(ivec2(random.nextInt(0, 1500),
+          random.nextInt(0, 1500)));
       gl::draw(pieces.at(i).texture, pieces.at(i).bounds
-      .scaledCentered(.15f));
+        .scaled(.9f));
     }
     has_shuffled_already = true;
+  } else if (!pieces.empty()) {
+
+    for (int i = 0; i < pieces.size(); i++) {
+      gl::draw(pieces.at(i).texture, pieces.at(i).bounds
+          .scaled(.35f));
+    }
   }
 }
 void MyApp::drawPiecesSlidePuzzle() {
@@ -131,6 +141,7 @@ void MyApp::drawPiecesSlidePuzzle() {
 
 
 void MyApp::breakUpPicture() {
+  //FIXME only first texture is being applied correctly
   pieces.clear();
 
   numPiecesX = getOptimalNumPieces(whole_picture.getWidth());
@@ -140,12 +151,13 @@ void MyApp::breakUpPicture() {
 
   for (int i = 0; i < whole_picture.getHeight(); i = i + piece_height) {
     for (int j = 0; j < whole_picture.getWidth(); j = j + piece_width) {
+
       Area piece_bounds(ivec2(j, i),
           ivec2(j + piece_width, i + piece_height));
       Surface new_piece_surface(piece_width, piece_height, true);
       new_piece_surface.copyFrom(whole_picture, piece_bounds);
       gl::TextureRef texture = gl::Texture::create(new_piece_surface);
-      PuzzlePiece new_piece(texture, Rectf(piece_bounds));
+      PuzzlePiece new_piece(texture, piece_bounds);
       pieces.push_back(new_piece);
     }
   }
