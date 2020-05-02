@@ -12,3 +12,5 @@
 4/28 fixed issue with breaking up picture into pieces
 
 4/29 added functionality for shuffle and auto solve
+
+5/1 fixed issue with not all textures being loaded

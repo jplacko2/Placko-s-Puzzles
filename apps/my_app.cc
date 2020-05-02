@@ -80,8 +80,10 @@ void MyApp::draw() {
   if (should_shuffle) {
     if (is_jigsaw_mode) {
       drawPiecesScattered();
+      drawPuzzleBorder();
     } else {
       drawPiecesSlidePuzzle();
+      drawPuzzleBorder();
     }
   } else {
     drawPicture();
@@ -105,10 +107,11 @@ void MyApp::drawPicture() {
   gl::enableAlphaBlending();
 
   if (mTexture) {
-    Rectf destRect = Rectf(mTexture->getBounds())
-                         .getCenteredFit(getWindowBounds(), true)
-                         .scaledCentered(.9f);
-    gl::draw(mTexture, destRect);
+    whole_pic_rect = Rectf(mTexture->getBounds())
+                         .getCenteredFit(getWindowBounds(), false)
+                         .getOffset(ivec2(300, 50))
+                         .scaled(.8f);
+    gl::draw(mTexture, whole_pic_rect);
   }
 }
 
@@ -117,14 +120,12 @@ void MyApp::drawPiecesScattered() {
 
   gl::clear(Color(0.5f, 0.5f, 0.5f));
   gl::enableAlphaBlending();
-  //float scale = .9f * (1.0f / (float) numPiecesY);
   if (!pieces.empty() && !has_shuffled_already) {
     for (int i = 0; i < pieces.size(); i++) {
-
-      pieces.at(i).bounds.moveULTo(ivec2(random.nextInt(0, 1500),
-          random.nextInt(0, 1500)));
-      gl::draw(pieces.at(i).texture, pieces.at(i).bounds
-        .scaled(.9f));
+      PuzzlePiece& piece = pieces.at(i);
+      piece.bounds.moveULTo(ivec2(random.nextInt(5000),
+          random.nextInt(2500)));
+      gl::draw(piece.texture, piece.bounds.scaled(.35f));
     }
     has_shuffled_already = true;
   } else if (!pieces.empty()) {
@@ -141,7 +142,6 @@ void MyApp::drawPiecesSlidePuzzle() {
 
 
 void MyApp::breakUpPicture() {
-  //FIXME only first texture is being applied correctly
   pieces.clear();
 
   numPiecesX = getOptimalNumPieces(whole_picture.getWidth());
@@ -149,15 +149,16 @@ void MyApp::breakUpPicture() {
   int piece_width = whole_picture.getWidth() / numPiecesX;
   int piece_height = whole_picture.getHeight() / numPiecesY;
 
-  for (int i = 0; i < whole_picture.getHeight(); i = i + piece_height) {
-    for (int j = 0; j < whole_picture.getWidth(); j = j + piece_width) {
+  for (int y = 0; y < whole_picture.getHeight(); y = y + piece_height) {
+    for (int x = 0; x < whole_picture.getWidth(); x = x + piece_width) {
 
-      Area piece_bounds(ivec2(j, i),
-          ivec2(j + piece_width, i + piece_height));
       Surface new_piece_surface(piece_width, piece_height, true);
-      new_piece_surface.copyFrom(whole_picture, piece_bounds);
-      gl::TextureRef texture = gl::Texture::create(new_piece_surface);
-      PuzzlePiece new_piece(texture, piece_bounds);
+
+
+      gl::TextureRef texture =getPieceTexture(x, y, x + piece_width,
+          y + piece_height, new_piece_surface);
+      Rectf piece_rect = Rectf(texture->getBounds());
+      PuzzlePiece new_piece = PuzzlePiece(texture, piece_rect);
       pieces.push_back(new_piece);
     }
   }
@@ -180,21 +181,43 @@ int MyApp::getOptimalNumPieces(int length) {
   return 2;
 }
 
-void MyApp::mouseDrag(MouseEvent event) {
+void MyApp::mouseDown(MouseEvent event) {
   //TODO fix this for dragging pieces
-  if (selected_piece.bounds.contains(event.getPos())) {
-    selected_piece.bounds = selected_piece.bounds.getOffset(event.getPos());
-    return;
-  }
+
   if (!pieces.empty()) {
     for (int i = 0; i < pieces.size(); i++) {
       if (pieces.at(i).bounds.contains(event.getPos())) {
-        selected_piece = pieces.at(i);
-        selected_piece.bounds = selected_piece.bounds.getOffset(event.getPos());
+        selected_piece = &pieces.at(i);
         return;
       }
     }
   }
 }
 
+void MyApp::mouseUp(MouseEvent event) {
+  selected_piece->bounds = selected_piece->bounds.getOffset(event.getPos());
+  selected_piece = nullptr;
+}
+
+gl::TextureRef MyApp::getPieceTexture(int start_x, int start_y, int end_x, int end_y,
+                               Surface& result_surface) {
+  for (int x = 0; x < end_x - start_x; x++) {
+    for (int y = 0; y < end_y - start_y; y++) {
+      result_surface.setPixel(ivec2(x, y),
+          whole_picture.getPixel(ivec2(x + start_x, y + start_y)));
+    }
+  }
+  gl::TextureRef to_return = gl::Texture::create(result_surface);
+  return to_return;
+}
+
+void MyApp::drawPuzzleBorder() {
+  Path2d path;
+  path.moveTo(whole_pic_rect.getUpperLeft());
+  path.lineTo(whole_pic_rect.getLowerLeft());
+  path.lineTo(whole_pic_rect.getLowerRight());
+  path.lineTo(whole_pic_rect.getUpperRight());
+  path.close();
+  gl::draw(path);
+}
 }  // namespace myapp
