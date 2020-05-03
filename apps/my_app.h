@@ -47,9 +47,9 @@ class MyApp : public cinder::app::App {
   std::vector<PuzzlePiece> pieces;
   bool is_jigsaw_mode = true;
   int num_pieces_x;
-  float piece_width;
+  int piece_width;
   int num_pieces_y;
-  float piece_height;
+  int piece_height;
   bool should_shuffle = false;
   bool has_shuffled_already = false;
   PuzzlePiece* selected_piece = nullptr;
