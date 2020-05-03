@@ -110,7 +110,7 @@ void MyApp::drawPicture() {
     whole_pic_rect = Rectf(mTexture->getBounds())
                          .getCenteredFit(getWindowBounds(), false)
                          .getOffset(ivec2(300, 50))
-                         .scaled(.8f);
+                         .scaled(kPicScale);
     gl::draw(mTexture, whole_pic_rect);
   }
 }
@@ -129,7 +129,11 @@ void MyApp::drawPiecesScattered() {
         piece.bounds.moveULTo(ivec2(random.nextInt(5000),
             random.nextInt(2500)));
       }
-      gl::draw(piece.texture, piece.bounds.scaled(.35f));
+      if (piece.is_in_frame) {
+        drawPieceAdjustedToBoard(&piece);
+      } else {
+        gl::draw(piece.texture, piece.bounds.scaled(kPieceScale));
+      }
     }
     has_shuffled_already = true;
   }
@@ -187,8 +191,8 @@ int MyApp::getOptimalNumPieces(int length) {
 }
 
 void MyApp::mouseDown(MouseEvent event) {
-  float x = event.getPos().x / .35f;
-  float y = event.getPos().y / .35f;
+  float x = event.getPos().x / kPieceScale;
+  float y = event.getPos().y / kPieceScale;
   ivec2 adjusted_coords(x, y);
   if (selected_piece == nullptr && !pieces.empty()) {
     for (int i = 0; i < pieces.size(); i++) {
@@ -199,34 +203,13 @@ void MyApp::mouseDown(MouseEvent event) {
     }
   } else {
     selected_piece->bounds.offsetCenterTo(adjusted_coords);
+    if (whole_pic_rect.contains(ivec2(x * kPicScale, y * kPicScale))) {
+      selected_piece->is_in_frame = true;
+    }
     selected_piece = nullptr;
   }
 }
 
-/*void MyApp::mouseDrag(MouseEvent event) {
-  float x = event.getPos().x / .35f;
-  float y = event.getPos().y / .35f;
-  ivec2 adjusted_coords(x, y);
-  if (selected_piece != nullptr) {
-    selected_piece->bounds.offsetCenterTo(event.getPos());
-  } else if (!pieces.empty()) {
-    for (int i = 0; i < pieces.size(); i++) {
-      if (pieces.at(i).bounds.contains(adjusted_coords)) {
-        selected_piece = &pieces.at(i);
-        selected_piece->bounds.offsetCenterTo(event.getPos());
-        return;
-      }
-    }
-  }
-}*/
-
-/*void MyApp::mouseMove(MouseEvent event) {
-
-}*/
-
-/*void MyApp::mouseUp(MouseEvent event) {
-  selected_piece = nullptr;
-}*/
 
 gl::TextureRef MyApp::getPieceTexture(int start_x, int start_y, int end_x, int end_y,
                                Surface& result_surface) {
@@ -248,5 +231,24 @@ void MyApp::drawPuzzleBorder() {
   path.lineTo(whole_pic_rect.getUpperRight());
   path.close();
   gl::draw(path);
+}
+
+void MyApp::drawPieceAdjustedToBoard(PuzzlePiece* piece) {
+  float adj_x = (piece->bounds.getCenter().x * kPieceScale) / kPicScale;
+  float adj_y = (piece->bounds.getCenter().y * kPieceScale) / kPicScale;
+  ivec2 adjusted_coords(adj_x, adj_y);
+  for (int i = 0; i < num_pieces_x; i++) {
+    for (int j = 0; j < num_pieces_y; j++) {
+
+      float x_rect_center = whole_pic_rect.x1 + (piece_width / 2) + (i * piece_width);
+      float y_rect_center = whole_pic_rect.y1 + (piece_height / 2) + (j * piece_height);
+      if (std::abs(adj_x - x_rect_center) < piece_width / 2
+          && std::abs(adj_y - y_rect_center) < piece_height / 2) {
+        Rectf rect(x_rect_center - piece_width / 2, y_rect_center - piece_height,
+                   x_rect_center + piece_width / 2, y_rect_center + piece_height);
+        gl::draw(piece->texture, rect);
+      }
+    }
+  }
 }
 }  // namespace myapp
