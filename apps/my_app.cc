@@ -41,7 +41,7 @@ void MyApp::update() {
         should_shuffle = false;
         has_shuffled_already = false;
       }
-    } catch (Exception &exc) {
+    } catch (Exception& exc) {
       CI_LOG_EXCEPTION("failed to load image.", exc);
     }
   }
@@ -62,7 +62,6 @@ void MyApp::update() {
       should_shuffle = false;
       breakUpPicture();
     }
-
   } else {
     ui::SameLine();
     if (ui::Button("Jigsaw Puzzle Mode", ImVec2(200, 150))) {
@@ -81,8 +80,9 @@ void MyApp::draw() {
     if (is_jigsaw_mode) {
       drawPiecesScattered();
       drawPuzzleBorder();
+      drawMiniViewPicture();
     } else {
-      drawPiecesSlidePuzzle();
+      drawMiniViewPicture();
       drawPuzzleBorder();
     }
   } else {
@@ -120,34 +120,39 @@ void MyApp::drawPiecesScattered() {
 
   gl::clear(Color(0.5f, 0.5f, 0.5f));
   gl::enableAlphaBlending();
-  if (!pieces.empty() && !has_shuffled_already) {
+
+  if (!pieces.empty()) {
     for (int i = 0; i < pieces.size(); i++) {
       PuzzlePiece& piece = pieces.at(i);
-      piece.bounds.moveULTo(ivec2(random.nextInt(5000),
-          random.nextInt(2500)));
+
+      if (!has_shuffled_already) {
+        piece.bounds.moveULTo(ivec2(random.nextInt(5000),
+            random.nextInt(2500)));
+      }
       gl::draw(piece.texture, piece.bounds.scaled(.35f));
     }
     has_shuffled_already = true;
-  } else if (!pieces.empty()) {
-
-    for (int i = 0; i < pieces.size(); i++) {
-      gl::draw(pieces.at(i).texture, pieces.at(i).bounds
-          .scaled(.35f));
-    }
   }
 }
-void MyApp::drawPiecesSlidePuzzle() {
 
+
+void MyApp::drawMiniViewPicture() {
+  if (mTexture) {
+    Rectf border = Rectf(mTexture->getBounds())
+        .scaled(.1f)
+        .getMoveULTo(ivec2(1500, 50));
+    gl::draw(mTexture, border);
+  }
 }
 
 
 void MyApp::breakUpPicture() {
   pieces.clear();
 
-  numPiecesX = getOptimalNumPieces(whole_picture.getWidth());
-  numPiecesY = getOptimalNumPieces(whole_picture.getHeight());
-  int piece_width = whole_picture.getWidth() / numPiecesX;
-  int piece_height = whole_picture.getHeight() / numPiecesY;
+  num_pieces_x = getOptimalNumPieces(whole_picture.getWidth());
+  num_pieces_y = getOptimalNumPieces(whole_picture.getHeight());
+  piece_width = whole_picture.getWidth() / num_pieces_x;
+  piece_height = whole_picture.getHeight() / num_pieces_y;
 
   for (int y = 0; y < whole_picture.getHeight(); y = y + piece_height) {
     for (int x = 0; x < whole_picture.getWidth(); x = x + piece_width) {
@@ -155,7 +160,7 @@ void MyApp::breakUpPicture() {
       Surface new_piece_surface(piece_width, piece_height, true);
 
 
-      gl::TextureRef texture =getPieceTexture(x, y, x + piece_width,
+      gl::TextureRef texture = getPieceTexture(x, y, x + piece_width,
           y + piece_height, new_piece_surface);
       Rectf piece_rect = Rectf(texture->getBounds());
       PuzzlePiece new_piece = PuzzlePiece(texture, piece_rect);
@@ -182,22 +187,46 @@ int MyApp::getOptimalNumPieces(int length) {
 }
 
 void MyApp::mouseDown(MouseEvent event) {
-  //TODO fix this for dragging pieces
-
-  if (!pieces.empty()) {
+  float x = event.getPos().x / .35f;
+  float y = event.getPos().y / .35f;
+  ivec2 adjusted_coords(x, y);
+  if (selected_piece == nullptr && !pieces.empty()) {
     for (int i = 0; i < pieces.size(); i++) {
-      if (pieces.at(i).bounds.contains(event.getPos())) {
+      if (pieces.at(i).bounds.contains(adjusted_coords)) {
         selected_piece = &pieces.at(i);
         return;
       }
     }
+  } else {
+    selected_piece->bounds.offsetCenterTo(adjusted_coords);
+    selected_piece = nullptr;
   }
 }
 
-void MyApp::mouseUp(MouseEvent event) {
-  selected_piece->bounds = selected_piece->bounds.getOffset(event.getPos());
+/*void MyApp::mouseDrag(MouseEvent event) {
+  float x = event.getPos().x / .35f;
+  float y = event.getPos().y / .35f;
+  ivec2 adjusted_coords(x, y);
+  if (selected_piece != nullptr) {
+    selected_piece->bounds.offsetCenterTo(event.getPos());
+  } else if (!pieces.empty()) {
+    for (int i = 0; i < pieces.size(); i++) {
+      if (pieces.at(i).bounds.contains(adjusted_coords)) {
+        selected_piece = &pieces.at(i);
+        selected_piece->bounds.offsetCenterTo(event.getPos());
+        return;
+      }
+    }
+  }
+}*/
+
+/*void MyApp::mouseMove(MouseEvent event) {
+
+}*/
+
+/*void MyApp::mouseUp(MouseEvent event) {
   selected_piece = nullptr;
-}
+}*/
 
 gl::TextureRef MyApp::getPieceTexture(int start_x, int start_y, int end_x, int end_y,
                                Surface& result_surface) {

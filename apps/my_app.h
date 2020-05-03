@@ -26,7 +26,7 @@ struct PuzzlePiece {
     texture = t;
     bounds = r;
   }
-
+  void update();
   gl::TextureRef texture;
   Rectf bounds;
 };
@@ -38,7 +38,9 @@ class MyApp : public cinder::app::App {
   void update() override;
   void draw() override;
   void mouseDown(MouseEvent event) override;
-  void mouseUp(MouseEvent event) override;
+  //void mouseDrag(MouseEvent event) override;
+  //void mouseMove(MouseEvent event) override;
+  //void mouseUp(MouseEvent event) override;
   void fileDrop( FileDropEvent event ) override;
 
 
@@ -47,11 +49,13 @@ class MyApp : public cinder::app::App {
   Surface whole_picture;
   std::vector<PuzzlePiece> pieces;
   bool is_jigsaw_mode = true;
-  int numPiecesX;
-  int numPiecesY;
+  int num_pieces_x;
+  int piece_width;
+  int num_pieces_y;
+  int piece_height;
   bool should_shuffle = false;
   bool has_shuffled_already = false;
-  PuzzlePiece* selected_piece;
+  PuzzlePiece* selected_piece = nullptr;
   Rand random;
 
  private:
@@ -59,7 +63,7 @@ class MyApp : public cinder::app::App {
   void breakUpPicture();
   int getOptimalNumPieces(int length);
   void drawPiecesScattered();
-  void drawPiecesSlidePuzzle();
+  void drawMiniViewPicture();
   gl::TextureRef getPieceTexture(int start_x, int start_y, int end_x, int end_y,
                                  Surface& result_surface);
   void drawPuzzleBorder();
