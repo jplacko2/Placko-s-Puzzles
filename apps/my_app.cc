@@ -38,6 +38,7 @@ void MyApp::update() {
         whole_picture = Surface(loadImage(path));
         mTexture = gl::Texture::create(whole_picture);
         breakUpPicture();
+        setUpFrame();
         should_shuffle = false;
         has_shuffled_already = false;
       }
@@ -54,21 +55,23 @@ void MyApp::update() {
   if (ui::Button("Solve", ImVec2(200, 150))) {
     should_shuffle = false;
   }
-  if (is_jigsaw_mode) {
+  if (is_hard_mode) {
     ui::SameLine();
-    if (ui::Button("Slide Puzzle Mode", ImVec2(200, 150))) {
-      is_jigsaw_mode = false;
+    if (ui::Button("Easy Mode", ImVec2(200, 150))) {
+      is_hard_mode = false;
       has_shuffled_already = false;
       should_shuffle = false;
       breakUpPicture();
+      kPieceScale = .25f;
     }
   } else {
     ui::SameLine();
-    if (ui::Button("Jigsaw Puzzle Mode", ImVec2(200, 150))) {
-      is_jigsaw_mode = true;
+    if (ui::Button("Hard Mode", ImVec2(200, 150))) {
+      is_hard_mode = true;
       has_shuffled_already = false;
       should_shuffle = false;
       breakUpPicture();
+      kPieceScale = .35f;
     }
   }
 }
@@ -77,14 +80,9 @@ void MyApp::draw() {
   cinder::gl::enableAlphaBlending();
   cinder::gl::clear();
   if (should_shuffle) {
-    if (is_jigsaw_mode) {
-      drawPiecesScattered();
-      drawPuzzleBorder();
-      drawMiniViewPicture();
-    } else {
-      drawMiniViewPicture();
-      drawPuzzleBorder();
-    }
+    drawPiecesScattered();
+    drawPuzzleFrame();
+    drawMiniViewPicture();
   } else {
     drawPicture();
   }
@@ -95,6 +93,7 @@ void MyApp::fileDrop(FileDropEvent event) {
     whole_picture = Surface(loadImage(loadFile(event.getFile(0))));
     mTexture = gl::Texture::create(whole_picture);
     breakUpPicture();
+    setUpFrame();
     should_shuffle = false;
     has_shuffled_already = false;
   } catch (Exception &exc) {
@@ -130,7 +129,6 @@ void MyApp::drawPiecesScattered() {
             random.nextInt(2500)));
       }
       if (piece.is_in_frame) {
-        drawPieceAdjustedToBoard(&piece);
       } else {
         gl::draw(piece.texture, piece.bounds.scaled(kPieceScale));
       }
@@ -167,14 +165,15 @@ void MyApp::breakUpPicture() {
       gl::TextureRef texture = getPieceTexture(x, y, x + piece_width,
           y + piece_height, new_piece_surface);
       Rectf piece_rect = Rectf(texture->getBounds());
-      PuzzlePiece new_piece = PuzzlePiece(texture, piece_rect);
+      PuzzlePiece new_piece = PuzzlePiece(texture, piece_rect,
+          x / piece_width, y / piece_height);
       pieces.push_back(new_piece);
     }
   }
 }
 
 int MyApp::getOptimalNumPieces(int length) {
-  if (is_jigsaw_mode) {
+  if (is_hard_mode) {
     for (int num = 10; num <= 40; num++) {
       if (length % num == 0) {
         return num;
@@ -203,8 +202,17 @@ void MyApp::mouseDown(MouseEvent event) {
     }
   } else {
     selected_piece->bounds.offsetCenterTo(adjusted_coords);
-    if (whole_pic_rect.contains(ivec2(x * kPicScale, y * kPicScale))) {
-      selected_piece->is_in_frame = true;
+    if (whole_pic_rect.contains(event.getPos())) {
+//TODO Fix piece locking in, add end of game feature, add tests
+      if (pieceIsInCorrectSpot(selected_piece, ivec2(event.getPos().x / kPicScale,
+          event.getPos().y / kPicScale))) {
+
+        fillInPieceInFrame(selected_piece->x_index * piece_width,
+            selected_piece->y_index * piece_height,
+            (selected_piece->x_index + 1) * piece_width,
+            (selected_piece->y_index + 1) * piece_height);
+        selected_piece->is_in_frame = true;
+      }
     }
     selected_piece = nullptr;
   }
@@ -223,7 +231,7 @@ gl::TextureRef MyApp::getPieceTexture(int start_x, int start_y, int end_x, int e
   return to_return;
 }
 
-void MyApp::drawPuzzleBorder() {
+void MyApp::drawPuzzleFrame() {
   Path2d path;
   path.moveTo(whole_pic_rect.getUpperLeft());
   path.lineTo(whole_pic_rect.getLowerLeft());
@@ -231,23 +239,32 @@ void MyApp::drawPuzzleBorder() {
   path.lineTo(whole_pic_rect.getUpperRight());
   path.close();
   gl::draw(path);
+  gl::TextureRef texture = gl::Texture::create(pic_in_frame);
+  gl::draw(texture, whole_pic_rect);
 }
 
-void MyApp::drawPieceAdjustedToBoard(PuzzlePiece* piece) {
-  float adj_x = (piece->bounds.getCenter().x * kPieceScale) / kPicScale;
-  float adj_y = (piece->bounds.getCenter().y * kPieceScale) / kPicScale;
-  ivec2 adjusted_coords(adj_x, adj_y);
-  for (int i = 0; i < num_pieces_x; i++) {
-    for (int j = 0; j < num_pieces_y; j++) {
+bool MyApp::pieceIsInCorrectSpot(PuzzlePiece* piece, ivec2 center) {
+  Rectf pieceRect((piece->x_index * piece_width) / kPicScale,
+                  (piece->y_index * piece_height) / kPicScale,
+                  ((piece->x_index + 1) * piece_width) / kPicScale,
+                  ((piece->y_index + 1) * piece_height) / kPicScale);
+  return pieceRect.contains(center);
+}
 
-      float x_rect_center = whole_pic_rect.x1 + (piece_width / 2) + (i * piece_width);
-      float y_rect_center = whole_pic_rect.y1 + (piece_height / 2) + (j * piece_height);
-      if (std::abs(adj_x - x_rect_center) < piece_width / 2
-          && std::abs(adj_y - y_rect_center) < piece_height / 2) {
-        Rectf rect(x_rect_center - piece_width / 2, y_rect_center - piece_height,
-                   x_rect_center + piece_width / 2, y_rect_center + piece_height);
-        gl::draw(piece->texture, rect);
-      }
+void MyApp::setUpFrame() {
+  pic_in_frame = Surface(mTexture->getWidth(), mTexture->getHeight(), true);
+  for (int x = 0; x < pic_in_frame.getWidth(); x++) {
+    for (int y = 0; y < pic_in_frame.getHeight(); y++) {
+      pic_in_frame.setPixel(ivec2(x, y), ColorA(.3f, .3f, .3f));
+    }
+  }
+}
+
+void MyApp::fillInPieceInFrame(int x1, int y1, int x2, int y2) {
+  for (int pic_x = x1; pic_x < x2; pic_x++) {
+    for (int pic_y = y1; pic_y < y2; pic_y++) {
+      pic_in_frame.setPixel(ivec2(pic_x, pic_y),
+          whole_picture.getPixel(ivec2(pic_x, pic_y)));
     }
   }
 }
