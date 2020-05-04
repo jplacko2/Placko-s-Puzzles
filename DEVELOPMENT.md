@@ -18,3 +18,7 @@
 5/2 fixed functionality for moving pieces around, 
 added rough functionality for adjusting pieces within frame 
 to lock in place
+
+5/3 attempted to completely fix pieces locking in place, still in progress
+
+5/4 fixed locking pieces in place, added text to display when game ends
