@@ -21,4 +21,5 @@ to lock in place
 
 5/3 attempted to completely fix pieces locking in place, still in progress
 
-5/4 fixed locking pieces in place, added text to display when game ends
+5/4 fixed locking pieces in place, added text to display when game ends, 
+added descriptions to docs/README.md and PROPOSAL.md
