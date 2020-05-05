@@ -5,8 +5,6 @@
 #include <catch2/catch.hpp>
 #include <cinder/Rand.h>
 
-#include <mylibrary/example.h>
-
 
 TEST_CASE("Random sanity test", "[random]") {
   const float random = cinder::randFloat();

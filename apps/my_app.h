@@ -77,7 +77,7 @@ class MyApp : public cinder::app::App {
   int num_pieces_y;
   int piece_height;
 
-  //constants representing the acceptable amount of PuzzlePieces in one direction when the puzzle is broken up
+  //constants for deciding the best amount of pieces in a direction based on side length and required difficulty
   const int kHardModeMinPieces = 10;
   const int kHardModeMaxPieces = 40;
   const int kEasyModeMinPieces = 5;

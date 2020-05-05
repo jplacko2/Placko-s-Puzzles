@@ -20,7 +20,6 @@ using namespace ImGui;
 MyApp::MyApp() {}
 
 void MyApp::setup() {
-
   cinder::gl::enableDepthWrite();
   cinder::gl::enableDepthRead();
   ui::initialize();
@@ -59,14 +58,14 @@ void MyApp::update() {
   //will display the opposite of the current mode, and when clicked will switch to the displayed mode
   if (is_hard_mode) {
     ui::SameLine();
-    if (ui::Button("Easy Mode", ImVec2(200, 150))) {
+    if (ui::Button("Switch to \nEasy Mode", ImVec2(200, 150))) {
       resetGame();
       is_hard_mode = false;
       breakUpPicture();
     }
   } else {
     ui::SameLine();
-    if (ui::Button("Hard Mode", ImVec2(200, 150))) {
+    if (ui::Button("Switch to \nHard Mode", ImVec2(200, 150))) {
       resetGame();
       is_hard_mode = true;
       breakUpPicture();
@@ -75,7 +74,6 @@ void MyApp::update() {
 }
 
 void MyApp::fileDrop(FileDropEvent event) {
-
   try {
     resetGame();
     whole_picture = Surface(loadImage(loadFile(event.getFile(0))));
@@ -87,12 +85,10 @@ void MyApp::fileDrop(FileDropEvent event) {
 }
 
 void MyApp::mouseDown(MouseEvent event) {
-
   //adjusts coordinates to what the puzzle is measured in to see if the mouse clicked on a piece
   float x = event.getPos().x / kPuzzleScale;
   float y = event.getPos().y / kPuzzleScale;
   ivec2 adjusted_coords(x, y);
-
   //if no piece has been selected but pieces exist, it goes through all the pieces to find the one being clicked and selects it
   if (selected_piece == nullptr && !pieces.empty()) {
     for (int i = 0; i < pieces.size(); i++) {
@@ -101,15 +97,12 @@ void MyApp::mouseDown(MouseEvent event) {
         return;
       }
     }
-
   } else { // if there is a selected piece then the piece is moved to the spot the mouse is in
     selected_piece->bounds.offsetCenterTo(adjusted_coords);
-
     //if the click was in the frame and the selected piece goes in that spot, it adds the piece to the frame and stops drawing it separately
     if (whole_pic_rect.contains(event.getPos())) {
       if (pieceIsInCorrectSpot(selected_piece)) {
         num_pieces_locked++;
-
         //when all the pieces are locked in, the game is over
         if (num_pieces_locked >= (num_pieces_x * num_pieces_y) && !game_over) {
           game_over = true;
@@ -127,7 +120,6 @@ void MyApp::mouseDown(MouseEvent event) {
 }
 
 void MyApp::draw() {
-
   cinder::gl::enableAlphaBlending();
   cinder::gl::clear();
 
@@ -147,7 +139,6 @@ void MyApp::draw() {
 
 
 void MyApp::drawPicture() {
-
   gl::clear(Color(0.5f, 0.5f, 0.5f));
   gl::enableAlphaBlending();
 
@@ -186,7 +177,6 @@ void MyApp::drawPiecesScattered() {
 
 
 void MyApp::drawMiniViewPicture() {
-
   if (mTexture) {
     Rectf border = Rectf(mTexture->getBounds())
         .scaled(.1f)
@@ -204,7 +194,6 @@ void MyApp::drawPuzzleFrame() {
   path.lineTo(whole_pic_rect.getLowerRight());
   path.lineTo(whole_pic_rect.getUpperRight());
   path.close();
-
   gl::draw(path);
   gl::TextureRef texture = gl::Texture::create(pic_in_frame);
   gl::draw(texture, whole_pic_rect);
