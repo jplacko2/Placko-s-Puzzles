@@ -290,8 +290,17 @@ void MyApp::renderTextBox() {
     text_b = random.nextFloat(1);
     last_color_change = std::chrono::system_clock::now();
   }
+  if (std::chrono::duration_cast <std::chrono::milliseconds>
+          (std::chrono::system_clock::now() - last_size_change).count() >=
+      500) {
+    font_size += 5;
+    if (font_size >= 200) {
+      font_size = 25;
+    }
+    game_over_font = Font(game_over_font.getName(), font_size);
+  }
 
-  TextBox tbox = TextBox().alignment( TextBox::CENTER).font(kGameOverFont).
+  TextBox tbox = TextBox().alignment( TextBox::CENTER).font(game_over_font).
       size( ivec2( 2900,1000 ) ).text(kGameOverText);
   tbox.setColor( Color( text_r, text_g, text_b ) );
   tbox.setBackgroundColor( ColorA( 0.5, 0.5, 0.5, 1 ) );

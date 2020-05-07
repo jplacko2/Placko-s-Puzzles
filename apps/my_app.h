@@ -63,14 +63,15 @@ class MyApp : public cinder::app::App {
   std::vector<PuzzlePiece> pieces;
 
   //the variables associated with the color changing "Puzzle Completed" text displayed after winning the game
-  const Font kGameOverFont = Font("Comic Sans MS", 100);
+  Font game_over_font = Font("Comic Sans MS", 25);
   gl::TextureRef game_over_texture;
   const std::string kGameOverText = "Puzzle \n Completed";
   std::chrono::time_point<std::chrono::system_clock> last_color_change;
   float text_r;
   float text_g;
   float text_b;
-
+  float font_size = 25;
+  std::chrono::time_point<std::chrono::system_clock> last_size_change;
   //keeps track of the amount of pieces in each direction and the size of a piece in each direction
   int num_pieces_x;
   int piece_width;
