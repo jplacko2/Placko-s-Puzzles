@@ -36,4 +36,4 @@ Lastly, there is the ******"solve"****** button, which you can use if you give u
 Clicking this button will erase any progress you had made on the puzzle, so be cautious before you do so.
 
 Hopefully this guide helps you understand how to play Placko's Puzzles.
-###Happy Puzzling
+Happy Puzzling
